@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45d4cfe248b22b440889147430ec172d, type: 3}
+  m_Name: UIContractSettings
+  m_EditorClassIdentifier: 
+  uiContracts:
+  - presenter:
+      rid: 8196671208783872259
+    viewViewPrefab: {fileID: 8243328895139107434, guid: 7173988446aa4ed4e9ee0f2affde9c87, type: 3}
+  - presenter:
+      rid: 8196671208783872260
+    viewViewPrefab: {fileID: 7003876498897537316, guid: 67522b4029444be4cbbb47ea28fe0157, type: 3}
+  - presenter:
+      rid: 8196671208783872261
+    viewViewPrefab: {fileID: 3019942351678147638, guid: dfedcd0e00f5f2a43ac227b203c8e603, type: 3}
+  references:
+    version: 2
+    RefIds:
+    - rid: 8196671208783872259
+      type: {class: MenuWindowPresenter, ns: GGTeam.Services.UIService.Samples, asm: Assembly-CSharp}
+      data: 
+    - rid: 8196671208783872260
+      type: {class: SettingsWindowPresenter, ns: GGTeam.Services.UIService.Samples, asm: Assembly-CSharp}
+      data: 
+    - rid: 8196671208783872261
+      type: {class: NotificationWidgetPresenter, ns: GGTeam.Services.UIService.Samples, asm: Assembly-CSharp}
+      data: 
