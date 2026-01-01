@@ -1,8 +1,4 @@
-
 https://docs.google.com/document/d/1hCDj4gA6DLOLEaYNOLs5sPx0HM68kixNxu_-O1cUjeQ/edit?usp=sharing
-
-
-
 
 === UI система по паттерну MVP ===
 
