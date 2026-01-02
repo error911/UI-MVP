@@ -42,22 +42,22 @@ https://docs.google.com/document/d/1hCDj4gA6DLOLEaYNOLs5sPx0HM68kixNxu\_-O1cUjeQ
 
 &nbsp;	В нем можно объявить публичные методы:
 
-&nbsp;	public void SetTitle(string title) => titleText.text = title;
-
+```csharp
+public void SetTitle(string title) => titleText.text = title;
+```
 
 
 2\. Создаем Model. Обычный класс с данными, ни от кого не наследуется. Может содержать данные и бизнес-логику.
 
 &nbsp;	Пример: 
 
-&nbsp;	public class MainMenuModel {
-
-&nbsp;   		public string Title;
-
-&nbsp;   		public Action OnExit;
-
-&nbsp;	}
-
+```csharp
+public class MainMenuModel
+{
+    public string Title;
+    public Action OnExit;
+}
+```
 
 
 3\. Создаем Presenter, который соединяет View и Model (Что в нашей системе не работало, а это базовая функция презентера)
@@ -76,32 +76,22 @@ https://docs.google.com/document/d/1hCDj4gA6DLOLEaYNOLs5sPx0HM68kixNxu\_-O1cUjeQ
 
 &nbsp;	Пример:
 
-&nbsp;	public class MainMenuPresenter : WindowPresenterBase<MainMenuView, MainMenuModel> {
+```csharp
+public class MainMenuPresenter : WindowPresenterBase<MainMenuView, MainMenuModel>
+{
+    protected override void OnOpen(MainMenuModel model)
+    {
+        View.SetTitle(model.Title);
+        View.SetPlayCallback(model.OnPlay);
+        View.SetExitCallback(model.OnExit);
+    }
 
-&nbsp;   		protected override void OnOpen(MainMenuModel model)
-
-&nbsp;   		{
-
-&nbsp;       		View.SetTitle(model.Title);
-
-&nbsp;       		View.SetPlayCallback(model.OnPlay);
-
-&nbsp;       		View.SetExitCallback(model.OnExit);
-
-&nbsp;   		}
-
-
-
-&nbsp;   		protected override void OnUpdate(MainMenuModel model)
-
-&nbsp;   		{
-
-&nbsp;       		View.SetTitle(model.Title);
-
-&nbsp;   		}
-
-&nbsp;	}
-
+    protected override void OnUpdate(MainMenuModel model)
+    {
+        View.SetTitle(model.Title);
+    }
+}
+```
 
 
 &nbsp;	Презентер для Виджета отличается наследуемым классм: WindowPresenterBase -> WidgetPresenterBase 
@@ -122,47 +112,34 @@ https://docs.google.com/document/d/1hCDj4gA6DLOLEaYNOLs5sPx0HM68kixNxu\_-O1cUjeQ
 
 
 
+```csharp
 // Пример открытия окна с данными
-
 uiService.OpenWindow("MainMenu", new MainMenuModel
-
 {
-
-Title = "Main Menu",
-
-OnExit = () => Debug.Log("Exit pressed")
-
+    Title = "Main Menu",
+    OnExit = () => Debug.Log("Exit pressed")
 });
 
 
-
-
-
-var widgetId = uiService.OpenWidget("Notification", new NotificationModel
-
+var guid = uiService.OpenWidget("Notification", new NotificationModel
 {
-
-Message = "Hello!"
-
+    Message = "Hello!"
 });
+```
 
 
 
-
-
+```csharp
 // Пример обновления виджета
 
 uiService.UpdateWidget(widgetId, new NotificationModel
-
 {
-
-Message = "Updated message."
-
+    Message = "Updated message."
 });
+```
 
 
-
-Важно: var widgetId это не String , а Guid. Поэтому всегда уникален и позволяет открывать одинаковые панели в неограниченном количестве.
+Важно: guid это не String , а Guid. Поэтому всегда уникален и позволяет открывать одинаковые панели в неограниченном количестве.
 
 
 
