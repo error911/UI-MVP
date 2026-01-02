@@ -1,15 +1,6 @@
 # UI-MVP
 
-UI Service
-
-
-
-https://docs.google.com/document/d/1hCDj4gA6DLOLEaYNOLs5sPx0HM68kixNxu\_-O1cUjeQ/edit?usp=sharing
-
-
-
-=== UI система по паттерну MVP ===
-
+## UI Service - по паттерну MVP
 
 
 Поддержка 2х типов UI-элементов:
@@ -19,14 +10,13 @@ https://docs.google.com/document/d/1hCDj4gA6DLOLEaYNOLs5sPx0HM68kixNxu\_-O1cUjeQ
 2\. UIWidget (независимые, количество не ограничено).
 
 
-
 Функционал сервиса: открыть, закрыть и обновить окно/виджет.
 
+&nbsp;
 
 
 
-
-=== Процесс создания кода ===
+### Процесс создания кода
 
 1\. Создаем View класс, который будет висеть на префабе.
 
@@ -101,15 +91,13 @@ public class MainMenuPresenter : WindowPresenterBase<MainMenuView, MainMenuModel
 
 
 
-
-=== Работа с UI ===
+### Работа с UI
 
 Все созданные окна необходимо зарегистрировать, что проще возложить на CORE и опишу чуть ниже.
 
 
 
 Пример работы с UI:
-
 
 
 ```csharp
@@ -141,6 +129,7 @@ uiService.UpdateWidget(widgetId, new NotificationModel
 
 Важно: guid это не String , а Guid. Поэтому всегда уникален и позволяет открывать одинаковые панели в неограниченном количестве.
 
+https://docs.google.com/document/d/1hCDj4gA6DLOLEaYNOLs5sPx0HM68kixNxu\_-O1cUjeQ/edit?usp=sharing
 
 
 
