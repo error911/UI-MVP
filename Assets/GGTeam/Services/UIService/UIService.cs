@@ -147,9 +147,15 @@ namespace GGTeam.Services.UIService
                 Debug.LogError($"[UIService] Window '{typeof(T)}': model type mismatch. Expected '{registration.ModelType.Name}', got '{model.GetType().Name}'.");
                 return;
             }
-
+            
             if (_activeWindow != null)
             {
+                if (_activeWindow.Presenter.GetType() == typeof(T))
+                {
+                    Debug.Log("This type window is already open. Use Update only.");
+                    //UpdateWindow(model);
+                    return;
+                }
                 CloseWindow();
             }
 

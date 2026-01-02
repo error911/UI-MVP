@@ -2,7 +2,7 @@
 
 namespace GGTeam.Services.UIService
 {
-    public abstract class UIPresenterWindow<TView, TModel> : /*IWindowPresenter,*/ ITypedPresenterWindow
+    public abstract class UIPresenterWindow<TView, TModel> : ITypedPresenterWindow
         where TView : class, IWindowView
     {
         protected TView View { get; private set; }
