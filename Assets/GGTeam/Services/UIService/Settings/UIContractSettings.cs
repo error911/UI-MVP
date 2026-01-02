@@ -8,7 +8,7 @@ namespace GGTeam.Services.UIService.Settings
     public class UIContractSettings : ScriptableObject
     {
         [SerializeField]
-        [ListDrawerSettings(/*ListElementLabelName = "@Key",*/ DraggableItems = false, ShowPaging = false, DefaultExpandedState = true, ListElementLabelName = "@ViewPrefab?.name")]
+        [ListDrawerSettings(/*ListElementLabelName = "@Key",*/ DraggableItems = false, ShowPaging = false, DefaultExpandedState = true, ListElementLabelName = "@ToString()")]
         private UIContract[] uiContracts;
 
         public UIContract[] GetUIContracts() => uiContracts;

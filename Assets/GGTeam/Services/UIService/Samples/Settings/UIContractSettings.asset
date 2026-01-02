@@ -15,13 +15,13 @@ MonoBehaviour:
   uiContracts:
   - presenter:
       rid: 8196671208783872259
-    viewViewPrefab: {fileID: 8243328895139107434, guid: 7173988446aa4ed4e9ee0f2affde9c87, type: 3}
+    viewPrefab: {fileID: 8243328895139107434, guid: 7173988446aa4ed4e9ee0f2affde9c87, type: 3}
   - presenter:
       rid: 8196671208783872260
-    viewViewPrefab: {fileID: 7003876498897537316, guid: 67522b4029444be4cbbb47ea28fe0157, type: 3}
+    viewPrefab: {fileID: 7003876498897537316, guid: 67522b4029444be4cbbb47ea28fe0157, type: 3}
   - presenter:
       rid: 8196671208783872261
-    viewViewPrefab: {fileID: 3019942351678147638, guid: dfedcd0e00f5f2a43ac227b203c8e603, type: 3}
+    viewPrefab: {fileID: 3019942351678147638, guid: dfedcd0e00f5f2a43ac227b203c8e603, type: 3}
   references:
     version: 2
     RefIds:

@@ -7,7 +7,7 @@ namespace GGTeam.Services.UIService.Samples
     public class ServicesContainer : MonoBehaviour
     {
         [SerializeField] private UIService uiService;
-        [SerializeField, AssetSelector] private UIContractSettings _uiContractSettings;
+        [SerializeField, AssetSelector] private UIContractSettings uiContractSettings;
 
         private void Awake()
         {
@@ -16,7 +16,7 @@ namespace GGTeam.Services.UIService.Samples
 
         private void RegisterUI()
         {
-            uiService.Register(_uiContractSettings);
+            uiService.Register(uiContractSettings);
         }
     }
 }

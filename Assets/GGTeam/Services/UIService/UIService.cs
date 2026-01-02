@@ -21,7 +21,7 @@ namespace GGTeam.Services.UIService
         public Canvas UIRoot => uIRoot;
 
 
-        #region Регистрация
+        #region === Register ===
 
         public void Register(UIContractSettings uiContractSettings)
         {
@@ -145,60 +145,10 @@ namespace GGTeam.Services.UIService
                 ModelType = prototype.ModelType
             };
         }
-        
-        /*public void RegisterWindowOld<TPresenter>(string id, UIWindowView prefab)
-            where TPresenter : ITypedPresenterWindow, new()
-        {
-            if (string.IsNullOrWhiteSpace(id))
-                throw new ArgumentException("Window id is null or empty.", nameof(id));
-            if (prefab == null)
-                throw new ArgumentNullException(nameof(prefab));
-
-            var prototype = new TPresenter();
-            if (!prototype.ViewType.IsAssignableFrom(prefab.GetType()))
-            {
-                Debug.LogError($"[UIService] Window '{id}': prefab of type '{prefab.GetType().Name}' " +
-                               $"is not compatible with presenter view type '{prototype.ViewType.Name}'.");
-                return;
-            }
-
-            _windowRegistry[id] = new WindowRegistration
-            {
-                Prefab = prefab,
-                PresenterFactory = () => new TPresenter(),
-                ModelType = prototype.ModelType
-            };
-        }*/
-
-        /*public void RegisterWidgetOld<TPresenter>(string id, UIWidgetView prefab)
-            where TPresenter : ITypedPresenterWidget, new()
-        {
-            if (string.IsNullOrWhiteSpace(id))
-                throw new ArgumentException("Widget id is null or empty.", nameof(id));
-            if (prefab == null)
-                throw new ArgumentNullException(nameof(prefab));
-
-            var prototype = new TPresenter();
-            if (!prototype.ViewType.IsAssignableFrom(prefab.GetType()))
-            {
-                Debug.LogError($"[UIService] Widget '{id}': prefab of type '{prefab.GetType().Name}' " +
-                               $"is not compatible with presenter view type '{prototype.ViewType.Name}'.");
-                return;
-            }
-
-            _widgetRegistry[id] = new WidgetRegistration
-            {
-                Prefab = prefab,
-                PresenterFactory = () => new TPresenter(),
-                ModelType = prototype.ModelType
-            };
-        }*/
-        
-
         #endregion
 
         
-        #region Окна
+        #region === Windows ===
 
         public void OpenWindow<T>(object model)
         {
@@ -206,6 +156,7 @@ namespace GGTeam.Services.UIService
             OpenWindow(id, model);
         }
         
+        [Obsolete("Use OpenWindow<T> instead.")]
         public void OpenWindow(string id, object model)
         {
             if (!_windowRegistry.TryGetValue(id, out var registration))
@@ -273,7 +224,7 @@ namespace GGTeam.Services.UIService
         #endregion
         
         
-        #region Виджеты
+        #region === Widgets ===
 
         public Guid OpenWidget<T>(object model)
         {
@@ -281,6 +232,7 @@ namespace GGTeam.Services.UIService
             return OpenWidget(id, model);
         }
         
+        [Obsolete("Use OpenWidget<T> instead.")]
         public Guid OpenWidget(string id, object model)
         {
             if (!_widgetRegistry.TryGetValue(id, out var registration))
@@ -343,7 +295,7 @@ namespace GGTeam.Services.UIService
         #endregion
 
         
-        #region Внутренние структуры
+        #region === Internal structures ===
 
         private sealed class WindowRegistration
         {

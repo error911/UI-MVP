@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace GGTeam.Services.UIService.Samples
 {
-    public class TestScene : MonoBehaviour
+    public class SceneSampleLogic : MonoBehaviour
     {
         [SerializeField] private UIService uiService;
         
@@ -31,7 +31,7 @@ namespace GGTeam.Services.UIService.Samples
                 OnPopupWidgetClick = OpenTestWidget,
             });
             
-            // Если использовать ID то вот так:
+            // If use 'ID' do:
             /*uiService.OpenWindow("Settings", new SettingsModel()
             {
                 Caption = "SETTINGS Window",
@@ -57,7 +57,7 @@ namespace GGTeam.Services.UIService.Samples
                 OnClick = OnBtnWidgetClick
             });
 
-            // Пример обновления виджета
+            // Sample WIDGET Update
             cnt++;
             uiService.UpdateWidget(widgetId, new NotificationModel
             {
