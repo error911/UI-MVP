@@ -12,8 +12,8 @@ namespace GGTeam.Services.UIService
         [SerializeField] private Transform windowsRoot;
         [SerializeField] private Transform widgetsRoot;
 
-        private readonly Dictionary<string, WindowRegistration> _windowRegistry = new();
-        private readonly Dictionary<string, WidgetRegistration> _widgetRegistry = new();
+        private readonly Dictionary<Type, WindowRegistration> _windowRegistry = new();
+        private readonly Dictionary<Type, WidgetRegistration> _widgetRegistry = new();
 
         private ActiveWindow _activeWindow;
         private readonly Dictionary<Guid, ActiveWidget> _activeWidgets = new();
@@ -46,26 +46,18 @@ namespace GGTeam.Services.UIService
                     Debug.LogWarning($"Register presenter or view is missing");
                     continue;
                 }
-
-                Register(uiLink.Presenter.GetType(), uiLink.ViewPrefab);
                 
-                // Если использовать ID, то регистрация такая:
-                /*if (uiLink.ViewPrefab is UIWindowView)
-                    uiService.RegisterWindow(uiLink.Presenter.GetType(), (UIWindowView)uiLink.ViewPrefab, uiLink.Key);
-                else if (uiLink.ViewPrefab is UIWidgetView)
-                    uiService.RegisterWidget(uiLink.Presenter.GetType(), (UIWidgetView)uiLink.ViewPrefab, uiLink.Key);*/
-            }
-        }
-        
-        private void Register(Type presenterType, UIView prefab, string id = null)
-        {
-            if (prefab as UIWindowView)
-            {
-                RegisterWindow(presenterType, (UIWindowView)prefab);
-            }
-            else if (prefab as UIWidgetView)
-            {
-                RegisterWidget(presenterType, (UIWidgetView)prefab);
+                var prefab = uiLink.ViewPrefab;
+                var presenterType = uiLink.Presenter.GetType();
+                
+                if (prefab as UIWindowView)
+                {
+                    RegisterWindow(presenterType, (UIWindowView)prefab);
+                }
+                else if (prefab as UIWidgetView)
+                {
+                    RegisterWidget(presenterType, (UIWidgetView)prefab);
+                }
             }
         }
         
@@ -74,14 +66,10 @@ namespace GGTeam.Services.UIService
         /// </summary>
         /// <param name="presenterType"></param>
         /// <param name="prefab"></param>
-        /// <param name="id">If Null Window registeret by Type</param>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="ArgumentException"></exception>
-        private void RegisterWindow(Type presenterType, UIWindowView prefab, string id = null)
+        private void RegisterWindow(Type presenterType, UIWindowView prefab)
         {
-            if (string.IsNullOrWhiteSpace(id))
-                id = presenterType.Name;
-            //throw new ArgumentException("Window id is null or empty.", nameof(id));
             if (prefab == null)
                 throw new ArgumentNullException(nameof(prefab));
             if (presenterType == null)
@@ -95,12 +83,12 @@ namespace GGTeam.Services.UIService
                     $"Type {presenterType.Name} must have parameterless constructor.",
                     nameof(presenterType));
 
-            if (_windowRegistry.ContainsKey(id))
-                Debug.LogWarning($"Window with id '{id}' already registered.  Replace previous.");
+            if (_windowRegistry.ContainsKey(presenterType))
+                Debug.LogWarning($"Window with id '{presenterType}' already registered.  Replace previous.");
             
             var prototype = (ITypedPresenterWindow)Activator.CreateInstance(presenterType);
             
-            _windowRegistry[id] = new WindowRegistration
+            _windowRegistry[presenterType] = new WindowRegistration
             {
                 Prefab = prefab,
                 PresenterFactory = () => (ITypedPresenterWindow)Activator.CreateInstance(presenterType),
@@ -113,14 +101,10 @@ namespace GGTeam.Services.UIService
         /// </summary>
         /// <param name="presenterType"></param>
         /// <param name="prefab"></param>
-        /// <param name="id">If Null Widget registeret by Type</param>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="ArgumentException"></exception>
-        private void RegisterWidget(Type presenterType, UIWidgetView prefab, string id = null)
+        private void RegisterWidget(Type presenterType, UIWidgetView prefab)
         {
-            if (string.IsNullOrWhiteSpace(id))
-                id = presenterType.Name;
-            //throw new ArgumentException("Widget id is null or empty.", nameof(id));
             if (prefab == null)
                 throw new ArgumentNullException(nameof(prefab));
             if (presenterType == null)
@@ -134,11 +118,11 @@ namespace GGTeam.Services.UIService
                     $"Type {presenterType.Name} must have parameterless constructor.",
                     nameof(presenterType));
             
-            if (_widgetRegistry.ContainsKey(id))
-                Debug.LogWarning($"Widget with id '{id}' already registered. Replace previous.");
+            if (_widgetRegistry.ContainsKey(presenterType))
+                Debug.LogWarning($"Widget with id '{presenterType}' already registered. Replace previous.");
 
             var prototype = (ITypedPresenterWidget)Activator.CreateInstance(presenterType);
-            _widgetRegistry[id] = new WidgetRegistration
+            _widgetRegistry[presenterType] = new WidgetRegistration
             {
                 Prefab = prefab,
                 PresenterFactory = () => (ITypedPresenterWidget)Activator.CreateInstance(presenterType),
@@ -152,28 +136,21 @@ namespace GGTeam.Services.UIService
 
         public void OpenWindow<T>(object model)
         {
-            var id = typeof(T).Name;
-            OpenWindow(id, model);
-        }
-        
-        [Obsolete("Use OpenWindow<T> instead.")]
-        public void OpenWindow(string id, object model)
-        {
-            if (!_windowRegistry.TryGetValue(id, out var registration))
+            if (!_windowRegistry.TryGetValue(typeof(T), out var registration))
             {
-                Debug.LogError($"[UIService] Failed to open Window. Window with id '{id}' is not registered.");
+                Debug.LogError($"[UIService] Failed to open Window. Window with type '{typeof(T)}' is not registered.");
                 return;
             }
 
             if (model != null && !registration.ModelType.IsInstanceOfType(model))
             {
-                Debug.LogError($"[UIService] Window '{id}': model type mismatch. Expected '{registration.ModelType.Name}', got '{model.GetType().Name}'.");
+                Debug.LogError($"[UIService] Window '{typeof(T)}': model type mismatch. Expected '{registration.ModelType.Name}', got '{model.GetType().Name}'.");
                 return;
             }
 
             if (_activeWindow != null)
             {
-                CloseWindow(_activeWindow.Id);
+                CloseWindow();
             }
 
             var view = Instantiate(registration.Prefab, windowsRoot);
@@ -184,7 +161,6 @@ namespace GGTeam.Services.UIService
 
             _activeWindow = new ActiveWindow
             {
-                Id = id,
                 View = view,
                 Presenter = presenter
             };
@@ -201,19 +177,16 @@ namespace GGTeam.Services.UIService
             var presenter = _activeWindow.Presenter;
             if (model != null && !presenter.ModelType.IsInstanceOfType(model))
             {
-                Debug.LogError($"[UIService] Window '{_activeWindow.Id}': model type mismatch. Expected '{presenter.ModelType.Name}', got '{model.GetType().Name}'.");
+                Debug.LogError($"[UIService] Window view: '{_activeWindow.View.GetType().Name}': model type mismatch presenter: {_activeWindow.Presenter.GetType().Name}. Expected '{presenter.ModelType.Name}', got '{model.GetType().Name}'.");
                 return;
             }
 
             presenter.OnUpdate(model);
         }
 
-        public void CloseWindow(string id = null)
+        public void CloseWindow()
         {
             if (_activeWindow == null)
-                return;
-
-            if (id != null && _activeWindow.Id != id)
                 return;
 
             _activeWindow.Presenter.OnClose();
@@ -225,25 +198,24 @@ namespace GGTeam.Services.UIService
         
         
         #region === Widgets ===
-
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="model"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns>Guid link to Update widget</returns>
         public Guid OpenWidget<T>(object model)
         {
-            var id = typeof(T).Name;
-            return OpenWidget(id, model);
-        }
-        
-        [Obsolete("Use OpenWidget<T> instead.")]
-        public Guid OpenWidget(string id, object model)
-        {
-            if (!_widgetRegistry.TryGetValue(id, out var registration))
+            if (!_widgetRegistry.TryGetValue(typeof(T), out var registration))
             {
-                Debug.LogError($"[UIService] Failed to open Widget. Widget with id '{id}' is not registered.");
+                Debug.LogError($"[UIService] Failed to open Widget. Widget with type '{typeof(T)}' is not registered.");
                 return Guid.Empty;
             }
 
             if (model != null && !registration.ModelType.IsInstanceOfType(model))
             {
-                Debug.LogError($"[UIService] Widget '{id}': model type mismatch. Expected '{registration.ModelType.Name}', got '{model.GetType().Name}'.");
+                Debug.LogError($"[UIService] Widget '{typeof(T)}': model type mismatch. Expected '{registration.ModelType.Name}', got '{model.GetType().Name}'.");
                 return Guid.Empty;
             }
 
@@ -255,8 +227,6 @@ namespace GGTeam.Services.UIService
             var guid = Guid.NewGuid();
             _activeWidgets[guid] = new ActiveWidget
             {
-                Id = id,
-                Guid = guid,
                 View = view,
                 Presenter = presenter
             };
@@ -275,7 +245,7 @@ namespace GGTeam.Services.UIService
             var presenter = widget.Presenter;
             if (model != null && !presenter.ModelType.IsInstanceOfType(model))
             {
-                Debug.LogError($"[UIService] Widget '{widget.Id}': model type mismatch. Expected '{presenter.ModelType.Name}', got '{model.GetType().Name}'.");
+                Debug.LogError($"[UIService] Widget view:'{widget.View.GetType().Name}' model type mismatch presenter: {widget.Presenter.GetType().Name}. Expected '{presenter.ModelType.Name}', got '{model.GetType().Name}'.");
                 return;
             }
 
@@ -313,15 +283,12 @@ namespace GGTeam.Services.UIService
 
         private sealed class ActiveWindow
         {
-            public string Id;
             public UIWindowView View;
             public ITypedPresenterWindow Presenter;
         }
 
         private sealed class ActiveWidget
         {
-            public string Id;
-            public Guid Guid;
             public UIWidgetView View;
             public ITypedPresenterWidget Presenter;
         }
