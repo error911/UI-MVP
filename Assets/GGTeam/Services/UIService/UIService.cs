@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using GGTeam.Services.UIService.Settings;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 
 namespace GGTeam.Services.UIService
 {
@@ -31,15 +32,20 @@ namespace GGTeam.Services.UIService
                 return;
             }
             
-            var contracts = uiContractSettings.GetUIContracts();
+            var contractsWindows = uiContractSettings.WindowsContracts();
+            var contractsWidgets = uiContractSettings.WidgetsContracts();
             
-            if (contracts.Length == 0)
+            RegWindow(contractsWindows);
+            RegWidget(contractsWidgets);
+            
+            /*if (contractsWindows.Length == 0)
             {
                 Debug.LogWarning("UI contract settings cannot be empty.");
                 return;
-            }
+            }*/
             
-            foreach (var uiLink in contracts)
+            /*
+            foreach (var uiLink in contractsWindows)
             {
                 if (uiLink.Presenter == null || uiLink.ViewPrefab == null)
                 {
@@ -48,26 +54,70 @@ namespace GGTeam.Services.UIService
                 }
                 
                 var prefab = uiLink.ViewPrefab;
+                var asset = uiLink.ViewAsset;
                 var presenterType = uiLink.Presenter.GetType();
+
+                //Debug.Log("!>> 0> " + asset.GetType());
+                //if (asset.GetType() == typeof(UIWindowView))
+                //{
+                //    Debug.Log("!>> 1");
+                //}
+                //else if (asset.Asset as UIWidgetView)
+                //{
+                //    Debug.Log("!>> 2");
+                //}
                 
                 if (prefab as UIWindowView)
                 {
-                    RegisterWindow(presenterType, (UIWindowView)prefab);
+//                    RegisterWindow(presenterType, (UIWindowView)prefab);
+                    RegisterWindowAsset(presenterType, asset);
                 }
                 else if (prefab as UIWidgetView)
                 {
-                    RegisterWidget(presenterType, (UIWidgetView)prefab);
+//                    RegisterWidget(presenterType, (UIWidgetView)prefab);
+                    RegisterWidgetAsset(presenterType, asset);
                 }
+            }
+            */
+        }
+
+
+        private void RegWindow(UIContract[] contracts)  //UIWindowView
+        {
+            foreach (var uiLink in contracts)
+            {
+                if (uiLink.Presenter == null || uiLink.ViewPrefab == null)
+                {
+                    Debug.LogWarning($"Register presenter or view is missing");
+                    continue;
+                }
+                
+                //var prefab = uiLink.ViewPrefab;
+                var asset = uiLink.ViewAsset;
+                var presenterType = uiLink.Presenter.GetType();
+                RegisterWindowAsset(presenterType, asset);
             }
         }
         
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="presenterType"></param>
-        /// <param name="prefab"></param>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="ArgumentException"></exception>
+        private void RegWidget(UIContract[] contracts)  //UIWidgetView
+        {
+            foreach (var uiLink in contracts)
+            {
+                if (uiLink.Presenter == null || uiLink.ViewPrefab == null)
+                {
+                    Debug.LogWarning($"Register presenter or view is missing");
+                    continue;
+                }
+                
+                //var prefab = uiLink.ViewPrefab;
+                var asset = uiLink.ViewAsset;
+                var presenterType = uiLink.Presenter.GetType();
+                RegisterWidgetAsset(presenterType, asset);
+            }
+        }
+        
+        
+        /*
         private void RegisterWindow(Type presenterType, UIWindowView prefab)
         {
             if (prefab == null)
@@ -95,15 +145,45 @@ namespace GGTeam.Services.UIService
                 ModelType = prototype.ModelType
             };
         }
+        */
         
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="presenterType"></param>
-        /// <param name="prefab"></param>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="ArgumentException"></exception>
-        private void RegisterWidget(Type presenterType, UIWidgetView prefab)
+        private void RegisterWindowAsset(Type presenterType, AssetReference asset) //UIWindowView
+        {
+            if (!asset.RuntimeKeyIsValid())
+            {
+                Debug.LogError("AssetReference не настроен!");
+                return;
+            }
+            
+            if (asset == null)
+                throw new ArgumentNullException(nameof(asset));
+            if (presenterType == null)
+                throw new ArgumentNullException(nameof(presenterType));
+            if (!typeof(ITypedPresenterWindow).IsAssignableFrom(presenterType))
+                throw new ArgumentException(
+                    $"Type {presenterType.Name} must implement {nameof(ITypedPresenterWindow)}.",
+                    nameof(presenterType));
+            if (presenterType.GetConstructor(Type.EmptyTypes) == null)
+                throw new ArgumentException(
+                    $"Type {presenterType.Name} must have parameterless constructor.",
+                    nameof(presenterType));
+
+            if (_windowRegistry.ContainsKey(presenterType))
+                Debug.LogWarning($"Window with id '{presenterType}' already registered.  Replace previous.");
+            
+            var prototype = (ITypedPresenterWindow)Activator.CreateInstance(presenterType);
+            
+            _windowRegistry[presenterType] = new WindowRegistration
+            {
+                AssetReference = asset,
+//                Prefab = prefab,
+                PresenterFactory = () => (ITypedPresenterWindow)Activator.CreateInstance(presenterType),
+                ModelType = prototype.ModelType
+            };
+        }
+        
+
+        /*private void RegisterWidget(Type presenterType, UIWidgetView prefab)
         {
             if (prefab == null)
                 throw new ArgumentNullException(nameof(prefab));
@@ -128,7 +208,42 @@ namespace GGTeam.Services.UIService
                 PresenterFactory = () => (ITypedPresenterWidget)Activator.CreateInstance(presenterType),
                 ModelType = prototype.ModelType
             };
+        }*/
+        
+        private void RegisterWidgetAsset(Type presenterType, AssetReference asset) //UIWidgetView prefab
+        {
+            if (!asset.RuntimeKeyIsValid())
+            {
+                Debug.LogError("AssetReference не настроен!");
+                return;
+            }
+            
+            if (asset == null)
+                throw new ArgumentNullException(nameof(asset));
+            if (presenterType == null)
+                throw new ArgumentNullException(nameof(presenterType));
+            if (!typeof(ITypedPresenterWidget).IsAssignableFrom(presenterType))
+                throw new ArgumentException(
+                    $"Type {presenterType.Name} must implement {nameof(ITypedPresenterWidget)}.",
+                    nameof(presenterType));
+            if (presenterType.GetConstructor(Type.EmptyTypes) == null)
+                throw new ArgumentException(
+                    $"Type {presenterType.Name} must have parameterless constructor.",
+                    nameof(presenterType));
+            
+            if (_widgetRegistry.ContainsKey(presenterType))
+                Debug.LogWarning($"Widget with id '{presenterType}' already registered. Replace previous.");
+
+            var prototype = (ITypedPresenterWidget)Activator.CreateInstance(presenterType);
+            _widgetRegistry[presenterType] = new WidgetRegistration
+            {
+                AssetReference = asset,
+//                Prefab = prefab,
+                PresenterFactory = () => (ITypedPresenterWidget)Activator.CreateInstance(presenterType),
+                ModelType = prototype.ModelType
+            };
         }
+        
         #endregion
 
         
@@ -152,14 +267,16 @@ namespace GGTeam.Services.UIService
             {
                 if (_activeWindow.Presenter.GetType() == typeof(T))
                 {
-                    Debug.Log("This type window is already open. Use Update only.");
+                    //Debug.LogWarning("Window is already opened. Use Update only.");
                     //UpdateWindow(model);
                     return;
                 }
                 CloseWindow();
             }
 
+Debug.Log("!>>!!! " + registration.Prefab.GetType());
             var view = Instantiate(registration.Prefab, windowsRoot);
+//            var v2 = LoadWindowAsset(registration.AssetReference, windowsRoot);
             var presenter = registration.PresenterFactory();
 
             presenter.Bind(view);
@@ -171,6 +288,20 @@ namespace GGTeam.Services.UIService
                 Presenter = presenter
             };
         }
+
+
+        private UIWindowView LoadWindowAsset(AssetReference asset, Transform parent = null)
+        {
+            if (!asset.RuntimeKeyIsValid())
+            {
+                Debug.LogError("AssetReference не настроен!");
+                return null;
+            }
+            
+            asset.InstantiateAsync()
+        }
+        
+        
 
         public void UpdateWindow(object model)
         {
@@ -275,14 +406,16 @@ namespace GGTeam.Services.UIService
 
         private sealed class WindowRegistration
         {
-            public UIWindowView Prefab;
+            public AssetReference AssetReference;
+//            public UIWindowView Prefab;
             public Func<ITypedPresenterWindow> PresenterFactory;
             public Type ModelType;
         }
 
         private sealed class WidgetRegistration
         {
-            public UIWidgetView Prefab;
+            public AssetReference AssetReference;
+//            public UIWidgetView Prefab;
             public Func<ITypedPresenterWidget> PresenterFactory;
             public Type ModelType;
         }

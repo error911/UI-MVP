@@ -1,5 +1,6 @@
 ﻿using Sirenix.OdinInspector;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 using UnityEngine.Serialization;
 
 namespace GGTeam.Services.UIService
@@ -9,9 +10,11 @@ namespace GGTeam.Services.UIService
     {
         [SerializeReference, SuffixLabel(".presenter")] private IPresenter presenter;
         [SerializeField, SuffixLabel(".prefab")] private UIView viewPrefab;
+        [SerializeField, AssetSelector, SuffixLabel(".prefab")] private AssetReference viewAsset;
         
         public IPresenter Presenter => presenter;
         public UIView ViewPrefab => viewPrefab;
+        public AssetReference ViewAsset => viewAsset;
 
         public override string ToString()
         {

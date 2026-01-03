@@ -19,4 +19,20 @@ namespace GGTeam.Services.UIService
 
     public abstract class UIWindowView : UIView, IWindowView { }
     public abstract class UIWidgetView : UIView, IWidgetView { }
+
+
+    //TODO
+    #region Prepare to Animations
+    
+    public interface AnimationInterface
+    {
+    }
+    
+    public interface IUIAnimationFade : AnimationInterface
+    {
+        public CanvasGroup CanvasGroup { get; }
+    }
+    
+    
+    #endregion
 }

@@ -12,25 +12,44 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 45d4cfe248b22b440889147430ec172d, type: 3}
   m_Name: UIContractSettings
   m_EditorClassIdentifier: 
-  uiContracts:
+  uiWindowsContracts:
   - presenter:
-      rid: 8196671208783872259
-    viewPrefab: {fileID: 8243328895139107434, guid: 7173988446aa4ed4e9ee0f2affde9c87, type: 3}
+      rid: 8196671217677107341
+    viewPrefab: {fileID: 0}
+    viewAsset:
+      m_AssetGUID: 7173988446aa4ed4e9ee0f2affde9c87
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0
   - presenter:
-      rid: 8196671208783872260
-    viewPrefab: {fileID: 7003876498897537316, guid: 67522b4029444be4cbbb47ea28fe0157, type: 3}
+      rid: 8196671217677107343
+    viewPrefab: {fileID: 0}
+    viewAsset:
+      m_AssetGUID: 67522b4029444be4cbbb47ea28fe0157
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0
+  uiWidgetsContracts:
   - presenter:
-      rid: 8196671208783872261
-    viewPrefab: {fileID: 3019942351678147638, guid: dfedcd0e00f5f2a43ac227b203c8e603, type: 3}
+      rid: 8196671217677107344
+    viewPrefab: {fileID: 0}
+    viewAsset:
+      m_AssetGUID: dfedcd0e00f5f2a43ac227b203c8e603
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0
   references:
     version: 2
     RefIds:
-    - rid: 8196671208783872259
+    - rid: 8196671217677107341
       type: {class: MenuWindowPresenter, ns: GGTeam.Services.UIService.Samples, asm: Assembly-CSharp}
       data: 
-    - rid: 8196671208783872260
+    - rid: 8196671217677107343
       type: {class: SettingsWindowPresenter, ns: GGTeam.Services.UIService.Samples, asm: Assembly-CSharp}
       data: 
-    - rid: 8196671208783872261
+    - rid: 8196671217677107344
       type: {class: NotificationWidgetPresenter, ns: GGTeam.Services.UIService.Samples, asm: Assembly-CSharp}
       data: 

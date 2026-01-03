@@ -9,9 +9,14 @@ namespace GGTeam.Services.UIService.Settings
     {
         [SerializeField]
         [ListDrawerSettings(/*ListElementLabelName = "@Key",*/ DraggableItems = false, ShowPaging = false, DefaultExpandedState = true, ListElementLabelName = "@ToString()")]
-        private UIContract[] uiContracts;
+        private UIContract[] uiWindowsContracts;
+        
+        [SerializeField]
+        [ListDrawerSettings(/*ListElementLabelName = "@Key",*/ DraggableItems = false, ShowPaging = false, DefaultExpandedState = true, ListElementLabelName = "@ToString()")]
+        private UIContract[] uiWidgetsContracts;
 
-        public UIContract[] GetUIContracts() => uiContracts;
+        public UIContract[] WindowsContracts() => uiWindowsContracts;
+        public UIContract[] WidgetsContracts() => uiWidgetsContracts;
 
 
         #if UNITY_EDITOR
@@ -20,14 +25,26 @@ namespace GGTeam.Services.UIService.Settings
         {
             Debug.ClearDeveloperConsole();
             
-            if (uiContracts == null) Assert.IsNotNull(uiContracts);
-            Assert.IsFalse(uiContracts.Length == 0, "No UI contracts defined.");
+          //  if (uiWindowsContracts == null) Assert.IsNotNull(uiWindowsContracts);
+          //  if (uiWidgetsContracts == null) Assert.IsNotNull(uiWidgetsContracts);
+          //  Assert.IsFalse(uiWindowsContracts.Length == 0, "No UI contracts defined.");
+          //  Assert.IsFalse(uiWidgetsContracts.Length == 0, "No UI contracts defined.");
 
-            foreach (var contract in uiContracts)
+            if (uiWindowsContracts != null)
+            foreach (var contract in uiWindowsContracts)
             {
                 Assert.IsNotNull(contract.Presenter, "No presenter found.");
                 Assert.IsNotNull(contract.ViewPrefab, "No view prefab defined.");
             }
+            
+            if (uiWidgetsContracts != null)
+            foreach (var contract in uiWidgetsContracts)
+            {
+                Assert.IsNotNull(contract.Presenter, "No presenter found.");
+                Assert.IsNotNull(contract.ViewPrefab, "No view prefab defined.");
+            }
+            
+            
             Debug.Log("Successful.");
         }
         #endif
