@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using GGTeam.Services.UIService.Settings;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace GGTeam.Services.UIService
 {
@@ -86,7 +87,7 @@ namespace GGTeam.Services.UIService
         {
             foreach (var uiLink in contracts)
             {
-                if (uiLink.Presenter == null || uiLink.ViewPrefab == null)
+                if (uiLink.Presenter == null/* || uiLink.ViewPrefab == null*/)
                 {
                     Debug.LogWarning($"Register presenter or view is missing");
                     continue;
@@ -103,7 +104,7 @@ namespace GGTeam.Services.UIService
         {
             foreach (var uiLink in contracts)
             {
-                if (uiLink.Presenter == null || uiLink.ViewPrefab == null)
+                if (uiLink.Presenter == null/* || uiLink.ViewPrefab == null*/)
                 {
                     Debug.LogWarning($"Register presenter or view is missing");
                     continue;
@@ -274,11 +275,19 @@ namespace GGTeam.Services.UIService
                 CloseWindow();
             }
 
-Debug.Log("!>>!!! " + registration.Prefab.GetType());
-            var view = Instantiate(registration.Prefab, windowsRoot);
+ReadyToSpawnWindow(registration, model);
+            
+//Debug.Log("!>>!!! " + registration.Prefab.GetType());
+//            var view = Instantiate(registration.Prefab, windowsRoot);
+            
+            
+//            var loadHandle = registration.AssetReference.InstantiateAsync();
+            //loadHandle.Completed += OnUILoaded;
+            
 //            var v2 = LoadWindowAsset(registration.AssetReference, windowsRoot);
+            
+            /*
             var presenter = registration.PresenterFactory();
-
             presenter.Bind(view);
             presenter.OnOpen(model);
 
@@ -287,22 +296,53 @@ Debug.Log("!>>!!! " + registration.Prefab.GetType());
                 View = view,
                 Presenter = presenter
             };
+            */
         }
 
 
-        private UIWindowView LoadWindowAsset(AssetReference asset, Transform parent = null)
+        private void ReadyToSpawnWindow(WindowRegistration registration, object model)
         {
-            if (!asset.RuntimeKeyIsValid())
+            var assetRef = registration.AssetReference;
+            var loadHandle = assetRef.InstantiateAsync(windowsRoot);
+            // Создаем замыкание для передачи данных в коллбэк
+            loadHandle.Completed += (AsyncOperationHandle<GameObject> handle) => 
             {
-                Debug.LogError("AssetReference не настроен!");
-                return null;
+                OnWindowLoaded(handle, registration, model);
+            };
+        }
+
+        private void OnWindowLoaded(AsyncOperationHandle<GameObject> handle, 
+            WindowRegistration registration, 
+            object model)
+        {
+            if (handle.Status == AsyncOperationStatus.Succeeded)
+            {
+                GameObject uiInstance = handle.Result;
+                var view = uiInstance.GetComponent<UIWindowView>();
+        
+                if (view != null)
+                {
+                    var presenter = registration.PresenterFactory();
+                    presenter.Bind(view);
+                    presenter.OnOpen(model);
+
+                    _activeWindow = new ActiveWindow
+                    {
+                        View = view,
+                        Presenter = presenter
+                    };
+                }
+                else
+                {
+                    Debug.LogError("UIView component not found on loaded prefab");
+                }
             }
-            
-            asset.InstantiateAsync()
+            else
+            {
+                Debug.LogError($"Ошибка загрузки: {handle.OperationException}");
+            }
         }
         
-        
-
         public void UpdateWindow(object model)
         {
             if (_activeWindow == null)
@@ -355,8 +395,11 @@ Debug.Log("!>>!!! " + registration.Prefab.GetType());
                 Debug.LogError($"[UIService] Widget '{typeof(T)}': model type mismatch. Expected '{registration.ModelType.Name}', got '{model.GetType().Name}'.");
                 return Guid.Empty;
             }
+            
+            var guid = Guid.NewGuid();
+            ReadyToSpawnWidget(registration, model, guid);
 
-            var view = Instantiate(registration.Prefab, widgetsRoot);
+            /*var view = Instantiate(registration.Prefab, widgetsRoot);
             var presenter = registration.PresenterFactory();
             presenter.Bind(view);
             presenter.OnOpen(model);
@@ -366,11 +409,62 @@ Debug.Log("!>>!!! " + registration.Prefab.GetType());
             {
                 View = view,
                 Presenter = presenter
-            };
+            };*/
 
             return guid;
         }
 
+        private void ReadyToSpawnWidget(WidgetRegistration registration, object model, Guid guid)
+        {
+            var assetRef = registration.AssetReference;
+            var loadHandle = assetRef.InstantiateAsync(widgetsRoot);
+            // Создаем замыкание для передачи данных в коллбэк
+            loadHandle.Completed += (AsyncOperationHandle<GameObject> handle) => 
+            {
+                OnWidgetLoaded(handle, registration, model, guid);
+            };
+        }
+        
+        private void OnWidgetLoaded(AsyncOperationHandle<GameObject> handle, 
+            WidgetRegistration registration, 
+            object model, Guid guid)
+        {
+            if (handle.Status == AsyncOperationStatus.Succeeded)
+            {
+                GameObject uiInstance = handle.Result;
+                var view = uiInstance.GetComponent<UIWidgetView>();
+        
+                if (view != null)
+                {
+                    var presenter = registration.PresenterFactory();
+                    presenter.Bind(view);
+                    presenter.OnOpen(model);
+
+                    _activeWidgets[guid] = new ActiveWidget
+                    {
+                        View = view,
+                        Presenter = presenter
+                    };
+                }
+                else
+                {
+                    Debug.LogError("UIView component not found on loaded prefab");
+                }
+            }
+            else
+            {
+                Debug.LogError($"Ошибка загрузки: {handle.OperationException}");
+            }
+        }
+        
+        
+        
+        
+        
+        
+        
+        
+        
         public void UpdateWidget(Guid instanceId, object model)
         {
             if (!_activeWidgets.TryGetValue(instanceId, out var widget))
