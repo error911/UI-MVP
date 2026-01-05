@@ -414,10 +414,12 @@ ReadyToSpawnWindow(registration, model);
             return guid;
         }
 
+private List<Guid> _loadingProcessWidgetsGuids = new List<Guid>();
         private void ReadyToSpawnWidget(WidgetRegistration registration, object model, Guid guid)
         {
             var assetRef = registration.AssetReference;
             var loadHandle = assetRef.InstantiateAsync(widgetsRoot);
+_loadingProcessWidgetsGuids.Add(guid);
             // Создаем замыкание для передачи данных в коллбэк
             loadHandle.Completed += (AsyncOperationHandle<GameObject> handle) => 
             {
@@ -445,6 +447,15 @@ ReadyToSpawnWindow(registration, model);
                         View = view,
                         Presenter = presenter
                     };
+
+                    if (_lateDataUpdateWidgets.ContainsKey(guid))
+                    {
+                        // Есть обновление данных
+                        var data = _lateDataUpdateWidgets[guid];
+                        UpdateWidget(guid, data);
+                        _lateDataUpdateWidgets.Remove(guid);
+
+                    }
                 }
                 else
                 {
@@ -455,6 +466,9 @@ ReadyToSpawnWindow(registration, model);
             {
                 Debug.LogError($"Ошибка загрузки: {handle.OperationException}");
             }
+            
+            if (_loadingProcessWidgetsGuids.Contains(guid)) // Проверку можно убрать
+                _loadingProcessWidgetsGuids.Remove(guid);
         }
         
         
@@ -463,12 +477,18 @@ ReadyToSpawnWindow(registration, model);
         
         
         
-        
-        
+        //private List<Guid> _loadingProcessWidgetsGuids = new List<Guid>();
+        private Dictionary<Guid, object> _lateDataUpdateWidgets = new Dictionary<Guid, object>();
         public void UpdateWidget(Guid instanceId, object model)
         {
             if (!_activeWidgets.TryGetValue(instanceId, out var widget))
             {
+                if (_loadingProcessWidgetsGuids.Contains(instanceId))
+                {
+                    Debug.Log("!>> IN LOADING PROCESS");
+                    _lateDataUpdateWidgets.Add(instanceId, model);
+                    return;
+                }
                 Debug.LogWarning($"[UIService] Widget instance '{instanceId}' does not exist.");
                 return;
             }
