@@ -19,6 +19,9 @@ namespace GGTeam.Services.UIService
 
         private ActiveWindow _activeWindow;
         private readonly Dictionary<Guid, ActiveWidget> _activeWidgets = new();
+        
+        private readonly List<Guid> _loadingProcessWidgetsGuids = new List<Guid>();
+        private Dictionary<Guid, object> _lateDataUpdateWidgets = new Dictionary<Guid, object>();
 
         public Canvas UIRoot => uIRoot;
 
@@ -38,117 +41,42 @@ namespace GGTeam.Services.UIService
             
             RegWindow(contractsWindows);
             RegWidget(contractsWidgets);
-            
-            /*if (contractsWindows.Length == 0)
-            {
-                Debug.LogWarning("UI contract settings cannot be empty.");
-                return;
-            }*/
-            
-            /*
-            foreach (var uiLink in contractsWindows)
-            {
-                if (uiLink.Presenter == null || uiLink.ViewPrefab == null)
-                {
-                    Debug.LogWarning($"Register presenter or view is missing");
-                    continue;
-                }
-                
-                var prefab = uiLink.ViewPrefab;
-                var asset = uiLink.ViewAsset;
-                var presenterType = uiLink.Presenter.GetType();
-
-                //Debug.Log("!>> 0> " + asset.GetType());
-                //if (asset.GetType() == typeof(UIWindowView))
-                //{
-                //    Debug.Log("!>> 1");
-                //}
-                //else if (asset.Asset as UIWidgetView)
-                //{
-                //    Debug.Log("!>> 2");
-                //}
-                
-                if (prefab as UIWindowView)
-                {
-//                    RegisterWindow(presenterType, (UIWindowView)prefab);
-                    RegisterWindowAsset(presenterType, asset);
-                }
-                else if (prefab as UIWidgetView)
-                {
-//                    RegisterWidget(presenterType, (UIWidgetView)prefab);
-                    RegisterWidgetAsset(presenterType, asset);
-                }
-            }
-            */
         }
 
 
-        private void RegWindow(UIContract[] contracts)  //UIWindowView
+        private void RegWindow(UIContract[] contracts)
         {
             foreach (var uiLink in contracts)
             {
-                if (uiLink.Presenter == null/* || uiLink.ViewPrefab == null*/)
+                if (uiLink.Presenter == null)
                 {
                     Debug.LogWarning($"Register presenter or view is missing");
                     continue;
                 }
                 
-                //var prefab = uiLink.ViewPrefab;
-                var asset = uiLink.ViewAsset;
+                var asset = uiLink.Configuration.ViewAsset;
                 var presenterType = uiLink.Presenter.GetType();
-                RegisterWindowAsset(presenterType, asset);
+                RegisterWindowAsset(presenterType, asset, uiLink.Configuration.UnloadOnHide);
             }
         }
         
-        private void RegWidget(UIContract[] contracts)  //UIWidgetView
+        private void RegWidget(UIContract[] contracts)
         {
             foreach (var uiLink in contracts)
             {
-                if (uiLink.Presenter == null/* || uiLink.ViewPrefab == null*/)
+                if (uiLink.Presenter == null)
                 {
                     Debug.LogWarning($"Register presenter or view is missing");
                     continue;
                 }
                 
-                //var prefab = uiLink.ViewPrefab;
-                var asset = uiLink.ViewAsset;
+                var asset = uiLink.Configuration.ViewAsset;
                 var presenterType = uiLink.Presenter.GetType();
-                RegisterWidgetAsset(presenterType, asset);
+                RegisterWidgetAsset(presenterType, asset, uiLink.Configuration.UnloadOnHide);
             }
         }
         
-        
-        /*
-        private void RegisterWindow(Type presenterType, UIWindowView prefab)
-        {
-            if (prefab == null)
-                throw new ArgumentNullException(nameof(prefab));
-            if (presenterType == null)
-                throw new ArgumentNullException(nameof(presenterType));
-            if (!typeof(ITypedPresenterWindow).IsAssignableFrom(presenterType))
-                throw new ArgumentException(
-                    $"Type {presenterType.Name} must implement {nameof(ITypedPresenterWindow)}.",
-                    nameof(presenterType));
-            if (presenterType.GetConstructor(Type.EmptyTypes) == null)
-                throw new ArgumentException(
-                    $"Type {presenterType.Name} must have parameterless constructor.",
-                    nameof(presenterType));
-
-            if (_windowRegistry.ContainsKey(presenterType))
-                Debug.LogWarning($"Window with id '{presenterType}' already registered.  Replace previous.");
-            
-            var prototype = (ITypedPresenterWindow)Activator.CreateInstance(presenterType);
-            
-            _windowRegistry[presenterType] = new WindowRegistration
-            {
-                Prefab = prefab,
-                PresenterFactory = () => (ITypedPresenterWindow)Activator.CreateInstance(presenterType),
-                ModelType = prototype.ModelType
-            };
-        }
-        */
-        
-        private void RegisterWindowAsset(Type presenterType, AssetReference asset) //UIWindowView
+        private void RegisterWindowAsset(Type presenterType, AssetReference asset, bool unloadOnHide)
         {
             if (!asset.RuntimeKeyIsValid())
             {
@@ -177,41 +105,13 @@ namespace GGTeam.Services.UIService
             _windowRegistry[presenterType] = new WindowRegistration
             {
                 AssetReference = asset,
-//                Prefab = prefab,
                 PresenterFactory = () => (ITypedPresenterWindow)Activator.CreateInstance(presenterType),
-                ModelType = prototype.ModelType
+                ModelType = prototype.ModelType,
+                UnloadOnHide = unloadOnHide
             };
         }
         
-
-        /*private void RegisterWidget(Type presenterType, UIWidgetView prefab)
-        {
-            if (prefab == null)
-                throw new ArgumentNullException(nameof(prefab));
-            if (presenterType == null)
-                throw new ArgumentNullException(nameof(presenterType));
-            if (!typeof(ITypedPresenterWidget).IsAssignableFrom(presenterType))
-                throw new ArgumentException(
-                    $"Type {presenterType.Name} must implement {nameof(ITypedPresenterWidget)}.",
-                    nameof(presenterType));
-            if (presenterType.GetConstructor(Type.EmptyTypes) == null)
-                throw new ArgumentException(
-                    $"Type {presenterType.Name} must have parameterless constructor.",
-                    nameof(presenterType));
-            
-            if (_widgetRegistry.ContainsKey(presenterType))
-                Debug.LogWarning($"Widget with id '{presenterType}' already registered. Replace previous.");
-
-            var prototype = (ITypedPresenterWidget)Activator.CreateInstance(presenterType);
-            _widgetRegistry[presenterType] = new WidgetRegistration
-            {
-                Prefab = prefab,
-                PresenterFactory = () => (ITypedPresenterWidget)Activator.CreateInstance(presenterType),
-                ModelType = prototype.ModelType
-            };
-        }*/
-        
-        private void RegisterWidgetAsset(Type presenterType, AssetReference asset) //UIWidgetView prefab
+        private void RegisterWidgetAsset(Type presenterType, AssetReference asset, bool unloadOnHide)
         {
             if (!asset.RuntimeKeyIsValid())
             {
@@ -239,9 +139,9 @@ namespace GGTeam.Services.UIService
             _widgetRegistry[presenterType] = new WidgetRegistration
             {
                 AssetReference = asset,
-//                Prefab = prefab,
                 PresenterFactory = () => (ITypedPresenterWidget)Activator.CreateInstance(presenterType),
-                ModelType = prototype.ModelType
+                ModelType = prototype.ModelType,
+                UnloadOnHide = unloadOnHide
             };
         }
         
@@ -275,32 +175,11 @@ namespace GGTeam.Services.UIService
                 CloseWindow();
             }
 
-ReadyToSpawnWindow(registration, model);
-            
-//Debug.Log("!>>!!! " + registration.Prefab.GetType());
-//            var view = Instantiate(registration.Prefab, windowsRoot);
-            
-            
-//            var loadHandle = registration.AssetReference.InstantiateAsync();
-            //loadHandle.Completed += OnUILoaded;
-            
-//            var v2 = LoadWindowAsset(registration.AssetReference, windowsRoot);
-            
-            /*
-            var presenter = registration.PresenterFactory();
-            presenter.Bind(view);
-            presenter.OnOpen(model);
-
-            _activeWindow = new ActiveWindow
-            {
-                View = view,
-                Presenter = presenter
-            };
-            */
+            LoadWindow(registration, model);
         }
 
 
-        private void ReadyToSpawnWindow(WindowRegistration registration, object model)
+        private void LoadWindow(WindowRegistration registration, object model)
         {
             var assetRef = registration.AssetReference;
             var loadHandle = assetRef.InstantiateAsync(windowsRoot);
@@ -329,7 +208,9 @@ ReadyToSpawnWindow(registration, model);
                     _activeWindow = new ActiveWindow
                     {
                         View = view,
-                        Presenter = presenter
+                        Presenter = presenter,
+                        Handle = handle,
+                        UnloadOnHide = registration.UnloadOnHide
                     };
                 }
                 else
@@ -367,7 +248,12 @@ ReadyToSpawnWindow(registration, model);
                 return;
 
             _activeWindow.Presenter.OnClose();
+            
             Destroy(_activeWindow.View.gameObject);
+            
+            if(_activeWindow.UnloadOnHide)
+                Addressables.Release(_activeWindow.Handle);
+            
             _activeWindow = null;
         }
 
@@ -397,29 +283,19 @@ ReadyToSpawnWindow(registration, model);
             }
             
             var guid = Guid.NewGuid();
-            ReadyToSpawnWidget(registration, model, guid);
-
-            /*var view = Instantiate(registration.Prefab, widgetsRoot);
-            var presenter = registration.PresenterFactory();
-            presenter.Bind(view);
-            presenter.OnOpen(model);
-
-            var guid = Guid.NewGuid();
-            _activeWidgets[guid] = new ActiveWidget
-            {
-                View = view,
-                Presenter = presenter
-            };*/
+            LoadWidget(registration, model, guid);
 
             return guid;
         }
 
-private List<Guid> _loadingProcessWidgetsGuids = new List<Guid>();
-        private void ReadyToSpawnWidget(WidgetRegistration registration, object model, Guid guid)
+
+        private void LoadWidget(WidgetRegistration registration, object model, Guid guid)
         {
+            _loadingProcessWidgetsGuids.Add(guid);
+            
             var assetRef = registration.AssetReference;
             var loadHandle = assetRef.InstantiateAsync(widgetsRoot);
-_loadingProcessWidgetsGuids.Add(guid);
+
             // Создаем замыкание для передачи данных в коллбэк
             loadHandle.Completed += (AsyncOperationHandle<GameObject> handle) => 
             {
@@ -445,7 +321,9 @@ _loadingProcessWidgetsGuids.Add(guid);
                     _activeWidgets[guid] = new ActiveWidget
                     {
                         View = view,
-                        Presenter = presenter
+                        Presenter = presenter,
+                        Handle = handle,
+                        UnloadOnHide = registration.UnloadOnHide
                     };
 
                     if (_lateDataUpdateWidgets.ContainsKey(guid))
@@ -454,7 +332,6 @@ _loadingProcessWidgetsGuids.Add(guid);
                         var data = _lateDataUpdateWidgets[guid];
                         UpdateWidget(guid, data);
                         _lateDataUpdateWidgets.Remove(guid);
-
                     }
                 }
                 else
@@ -471,21 +348,14 @@ _loadingProcessWidgetsGuids.Add(guid);
                 _loadingProcessWidgetsGuids.Remove(guid);
         }
         
-        
-        
-        
-        
-        
-        
-        //private List<Guid> _loadingProcessWidgetsGuids = new List<Guid>();
-        private Dictionary<Guid, object> _lateDataUpdateWidgets = new Dictionary<Guid, object>();
+
         public void UpdateWidget(Guid instanceId, object model)
         {
             if (!_activeWidgets.TryGetValue(instanceId, out var widget))
             {
+                // UI в процессе загрузки. Отложим обновление
                 if (_loadingProcessWidgetsGuids.Contains(instanceId))
                 {
-                    Debug.Log("!>> IN LOADING PROCESS");
                     _lateDataUpdateWidgets.Add(instanceId, model);
                     return;
                 }
@@ -510,6 +380,10 @@ _loadingProcessWidgetsGuids.Add(guid);
 
             widget.Presenter.OnClose();
             Destroy(widget.View.gameObject);
+            
+            if(widget.UnloadOnHide)
+                Addressables.Release(widget.Handle);
+                
             _activeWidgets.Remove(instanceId);
         }
 
@@ -521,29 +395,35 @@ _loadingProcessWidgetsGuids.Add(guid);
         private sealed class WindowRegistration
         {
             public AssetReference AssetReference;
-//            public UIWindowView Prefab;
             public Func<ITypedPresenterWindow> PresenterFactory;
             public Type ModelType;
+            public bool UnloadOnHide;
         }
 
         private sealed class WidgetRegistration
         {
             public AssetReference AssetReference;
-//            public UIWidgetView Prefab;
             public Func<ITypedPresenterWidget> PresenterFactory;
             public Type ModelType;
+            public bool UnloadOnHide;
         }
 
         private sealed class ActiveWindow
         {
             public UIWindowView View;
             public ITypedPresenterWindow Presenter;
+            
+            public AsyncOperationHandle<GameObject> Handle;
+            public bool UnloadOnHide;
         }
 
         private sealed class ActiveWidget
         {
             public UIWidgetView View;
             public ITypedPresenterWidget Presenter;
+            
+            public AsyncOperationHandle<GameObject> Handle;
+            public bool UnloadOnHide;
         }
 
         #endregion

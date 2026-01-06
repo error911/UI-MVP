@@ -1,7 +1,6 @@
 ﻿using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
-using UnityEngine.Serialization;
 
 namespace GGTeam.Services.UIService
 {
@@ -9,19 +8,32 @@ namespace GGTeam.Services.UIService
     public class UIContract
     {
         [SerializeReference, SuffixLabel(".presenter")] private IPresenter presenter;
-        [SerializeField, SuffixLabel(".prefab")] private UIView viewPrefab;
-        [SerializeField, AssetSelector, SuffixLabel(".prefab")] private AssetReference viewAsset;
+        [SerializeField, ShowIf("@presenter != null")] private UIContractConfiguration configuration = new UIContractConfiguration();
         
         public IPresenter Presenter => presenter;
-        public UIView ViewPrefab => viewPrefab;
-        public AssetReference ViewAsset => viewAsset;
+        public UIContractConfiguration Configuration => configuration;
 
+        #if UNITY_EDITOR
         public override string ToString()
         {
-            var name = "[ NULL ]";
-            if (viewPrefab != null) name = viewPrefab.name;
-            if (presenter == null) name = "[ ERROR: Presenter is Null ]";
+            var name = "[ Asset is Empty ]";
+            if (configuration.ViewAsset != null && configuration.ViewAsset.RuntimeKeyIsValid()) name = configuration.ViewAsset.editorAsset.name;
+            if (presenter == null) name = "[ Presenter is Null ]";
             return name;
         }
+        #endif
+    }
+
+    [System.Serializable]
+    public class UIContractConfiguration
+    {
+        [SerializeField, AssetSelector, SuffixLabel(".asset")] private AssetReference viewAsset;
+        [SerializeField, ShowIf(nameof(AssetIsValid))] private bool unloadOnHide = true;
+        
+        public bool UnloadOnHide => unloadOnHide;
+        public AssetReference ViewAsset => viewAsset;
+
+        private bool AssetIsValid() => viewAsset != null && @viewAsset.RuntimeKeyIsValid();
+
     }
 }

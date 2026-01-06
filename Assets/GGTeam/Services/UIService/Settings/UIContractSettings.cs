@@ -8,44 +8,40 @@ namespace GGTeam.Services.UIService.Settings
     public class UIContractSettings : ScriptableObject
     {
         [SerializeField]
-        [ListDrawerSettings(/*ListElementLabelName = "@Key",*/ DraggableItems = false, ShowPaging = false, DefaultExpandedState = true, ListElementLabelName = "@ToString()")]
-        private UIContract[] uiWindowsContracts;
+        [ListDrawerSettings(DraggableItems = false, ShowPaging = false, DefaultExpandedState = true, ListElementLabelName = "@ToString()")]
+        private UIContract[] windowsContracts;
         
         [SerializeField]
-        [ListDrawerSettings(/*ListElementLabelName = "@Key",*/ DraggableItems = false, ShowPaging = false, DefaultExpandedState = true, ListElementLabelName = "@ToString()")]
-        private UIContract[] uiWidgetsContracts;
+        [ListDrawerSettings(DraggableItems = false, ShowPaging = false, DefaultExpandedState = true, ListElementLabelName = "@ToString()")]
+        private UIContract[] widgetsContracts;
 
-        public UIContract[] WindowsContracts() => uiWindowsContracts;
-        public UIContract[] WidgetsContracts() => uiWidgetsContracts;
+        public UIContract[] WindowsContracts() => windowsContracts;
+        public UIContract[] WidgetsContracts() => widgetsContracts;
 
 
         #if UNITY_EDITOR
         [Button("Validate")]
         private void ValidateEditor()
         {
-            Debug.ClearDeveloperConsole();
+          if (windowsContracts != null)
+          {
+              foreach (var contract in windowsContracts)
+              {
+                  Assert.IsNotNull(contract.Presenter, "No presenter found.");
+                  Assert.IsTrue(contract.Configuration.ViewAsset.IsValid());
+              }
+          }
             
-          //  if (uiWindowsContracts == null) Assert.IsNotNull(uiWindowsContracts);
-          //  if (uiWidgetsContracts == null) Assert.IsNotNull(uiWidgetsContracts);
-          //  Assert.IsFalse(uiWindowsContracts.Length == 0, "No UI contracts defined.");
-          //  Assert.IsFalse(uiWidgetsContracts.Length == 0, "No UI contracts defined.");
-
-            if (uiWindowsContracts != null)
-            foreach (var contract in uiWindowsContracts)
-            {
-                Assert.IsNotNull(contract.Presenter, "No presenter found.");
-                Assert.IsNotNull(contract.ViewPrefab, "No view prefab defined.");
-            }
-            
-            if (uiWidgetsContracts != null)
-            foreach (var contract in uiWidgetsContracts)
-            {
-                Assert.IsNotNull(contract.Presenter, "No presenter found.");
-                Assert.IsNotNull(contract.ViewPrefab, "No view prefab defined.");
-            }
-            
-            
-            Debug.Log("Successful.");
+          if (widgetsContracts != null)
+          {
+              foreach (var contract in widgetsContracts)
+              {
+                  Assert.IsNotNull(contract.Presenter, "No presenter found.");
+                  Assert.IsTrue(contract.Configuration.ViewAsset.RuntimeKeyIsValid());
+              }
+          } 
+          
+          Debug.Log("Check complete.");
         }
         #endif
     }
